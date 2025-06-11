@@ -13,6 +13,10 @@ jobs:
     name: Plan
     runs-on: ubuntu-latest
     environment: prod
+    defaults:
+     run:
+       shell: bash
+       working-directory: ./environments/prod # TODO different paths for target env
     steps:
       - uses: actions/checkout@v4
 
@@ -36,3 +40,17 @@ jobs:
 
       - name: Terraform Validate
         run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        continue-on-error: true
+        id: plan
+
+      - name: Comment Plan on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: |
+            ### Terraform Plan Result
+            ```
+            ${{ steps.plan.outputs.stdout }}
+            ```

@@ -16,7 +16,7 @@ jobs:
     defaults:
      run:
        shell: bash
-       working-directory: ./environments/prod
+       working-directory: ./environments/prod # TODO different paths for target env
     steps:
       - uses: actions/checkout@v4
 
