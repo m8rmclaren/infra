@@ -16,6 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Setup Terraform
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "v1.12.2"
+
       # Configure aws creds
       - uses: aws-actions/configure-aws-credentials@v4
         with:
