@@ -27,6 +27,10 @@ jobs:
           aws-region: us-west-1
           role-to-assume: arn:aws:iam::691595548805:role/github_actions_full_admin
 
+      - name: Terraform init
+        id: init
+        run: terraform init
+
       - name: Terraform Format Check
         run: terraform fmt -check
 
