@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   plan:
-    name: Update
+    name: Plan
     runs-on: ubuntu-latest
     environment: prod
     steps:
@@ -20,3 +20,4 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: us-west-1
+          role-to-assume: arn:aws:iam::691595548805:role/github_actions_full_admin
