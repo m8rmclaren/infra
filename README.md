@@ -9,3 +9,5 @@
         --create-bucket-configuration LocationConstraint=us-west-1
     ```
 
+    > If region or bucket name is changed, corresponding change is necessary in Terraform code
+

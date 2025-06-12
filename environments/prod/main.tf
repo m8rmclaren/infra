@@ -1,10 +1,14 @@
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= v1.12.0"
+  required_providers {
+    digitalocean = {
+      source  = "digitalocean/digitalocean"
+      version = "~> 2.0"
+    }
+  }
 }
 
-provider "local" {}
+provider "digitalocean" {} # token set by DIGITALOCEAN_TOKEN
 
-resource "local_file" "example" {
-  content  = "Hello, world!"
-  filename = "${path.module}/hello.txt"
+data "digitalocean_project" "default" {
 }
