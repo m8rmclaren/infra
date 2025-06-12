@@ -50,4 +50,6 @@ module "cert_manager" {
   kubeconfig           = module.controlplane.kubeconfig
   name                 = "cert-manager"
   cert_manager_version = "v1.18.0"
+
+  depends_on = [module.controlplane]
 }
