@@ -88,6 +88,10 @@ resource "null_resource" "get_kubeconfig" {
     EOT
   }
 
+  triggers = {
+    always_run = timestamp() # This forces recreation on every `apply`
+  }
+
   depends_on = [null_resource.wait_for_droplet]
 }
 
