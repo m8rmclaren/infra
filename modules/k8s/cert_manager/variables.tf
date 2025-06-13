@@ -1,8 +1,3 @@
-variable "kubeconfig" {
-  type        = string
-  description = "Path to the kubeconfig"
-}
-
 variable "name" {
   type        = string
   description = "Release and namespace name"

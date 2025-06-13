@@ -5,6 +5,10 @@ terraform {
       source  = "digitalocean/digitalocean"
       version = "~> 2.0"
     }
+    remote = {
+      source  = "tmscer/remote"
+      version = "0.2.2"
+    }
   }
 }
 
@@ -13,6 +17,10 @@ locals {
 }
 
 provider "digitalocean" {} # token set by DIGITALOCEAN_TOKEN
+
+provider "remote" {
+  max_sessions = 2
+}
 
 resource "tls_private_key" "primary" {
   algorithm = "RSA"
@@ -35,7 +43,7 @@ resource "digitalocean_reserved_ip" "primary" {
 }
 
 module "controlplane" {
-  source = "../../modules/k8s/controlplane"
+  source = "../../../modules/k8s/controlplane"
   region = local.do_region
   # droplet_size = "s-1vcpu-1gb"
   droplet_size = "s-2vcpu-2gb"
@@ -45,11 +53,7 @@ module "controlplane" {
   public_ip    = digitalocean_reserved_ip.primary.ip_address
 }
 
-module "cert_manager" {
-  source               = "../../modules/k8s/cert_manager"
-  kubeconfig           = module.controlplane.kubeconfig
-  name                 = "cert-manager"
-  cert_manager_version = "v1.18.0"
-
-  depends_on = [module.controlplane]
+output "kubeconfig" {
+  value     = module.controlplane.kubeconfig
+  sensitive = true
 }

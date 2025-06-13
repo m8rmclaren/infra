@@ -4,6 +4,10 @@ terraform {
       source  = "digitalocean/digitalocean"
       version = "~> 2.0"
     }
+    remote = {
+      source  = "tmscer/remote"
+      version = "0.2.2"
+    }
   }
 }
 
@@ -22,6 +26,10 @@ resource "digitalocean_droplet" "control_plane" {
   monitoring = true
 
   tags = ["k8s", "control-plane"]
+}
+
+locals {
+  kubectl_path = "/root/kubeconfig"
 }
 
 # Wait for droplet to come online and its tasks to finish
@@ -46,7 +54,7 @@ resource "null_resource" "wait_for_droplet" {
 
   provisioner "remote-exec" {
     inline = [
-      "microk8s config > /root/kubeconfig"
+      "microk8s config > ${local.kubectl_path}"
     ]
   }
 }
@@ -77,21 +85,12 @@ resource "null_resource" "install_gateway_api_crds" {
   depends_on = [null_resource.wait_for_droplet]
 }
 
-resource "null_resource" "get_kubeconfig" {
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command     = <<EOT
-      echo "${var.ssh_key}" > /tmp/temp_ssh_key && \
-      chmod 600 /tmp/temp_ssh_key && \
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /tmp/temp_ssh_key root@${digitalocean_droplet.control_plane.ipv4_address}:/root/kubeconfig /tmp/ && \
-      rm /tmp/temp_ssh_key
-    EOT
+data "remote_file" "kubeconfig" {
+  conn {
+    host        = digitalocean_droplet.control_plane.ipv4_address
+    user        = "root"
+    private_key = var.ssh_key
   }
 
-  triggers = {
-    always_run = timestamp() # This forces recreation on every `apply`
-  }
-
-  depends_on = [null_resource.wait_for_droplet]
+  path = local.kubectl_path
 }
-

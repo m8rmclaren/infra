@@ -3,5 +3,5 @@ output "control_plane_ip" {
 }
 
 output "kubeconfig" {
-  value = "/tmp/kubeconfig"
+  value = data.remote_file.kubeconfig.content
 }
