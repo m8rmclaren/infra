@@ -93,4 +93,6 @@ data "remote_file" "kubeconfig" {
   }
 
   path = local.kubectl_path
+
+  depends_on = [null_resource.wait_for_droplet]
 }
