@@ -1,11 +1,30 @@
-variable "name" {
+variable "chart_version" {
   type        = string
-  description = "Release and namespace name"
-  default     = "cert-manager"
+  description = "The version of the Argo CD Helm chart to install"
 }
 
-variable "cert_manager_version" {
+variable "cluster_issuer" {
   type        = string
-  description = "Version of cert-manager to install"
-  default     = "v1.18.0"
+  description = "Name of the cert-manager ClusterIssuer that will be created"
+}
+
+variable "acme_server" {
+  type        = string
+  description = "The ACME server URL (e.g., Let's Encrypt Staging or Production)"
+}
+
+variable "email" {
+  type        = string
+  description = "Email address used for ACME registration"
+}
+
+variable "domain" {
+  type        = string
+  description = "The DNS domain name managed by Cloudflare"
+}
+
+variable "cloudflare_api_key" {
+  type        = string
+  description = "Cloudflare API Key"
+  sensitive   = true
 }

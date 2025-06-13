@@ -9,5 +9,5 @@ runcmd:
   - snap install microk8s --classic
   - snap install helm --classic
   - microk8s status --wait-ready
-  - microk8s enable dns metallb
+  - microk8s enable dns
   - echo "ok" > /var/lib/cloud/instance/user-data.success

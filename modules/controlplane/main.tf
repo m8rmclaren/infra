@@ -34,8 +34,6 @@ locals {
 
 # Wait for droplet to come online and its tasks to finish
 resource "null_resource" "wait_for_droplet" {
-  depends_on = [digitalocean_droplet.control_plane]
-
   connection {
     type        = "ssh"
     host        = digitalocean_droplet.control_plane.ipv4_address
@@ -56,6 +54,14 @@ resource "null_resource" "wait_for_droplet" {
     inline = [
       "microk8s config > ${local.kubectl_path}"
     ]
+  }
+
+  depends_on = [digitalocean_droplet.control_plane]
+
+  triggers = {
+    droplet_id     = digitalocean_droplet.control_plane.id
+    droplet_ip     = digitalocean_droplet.control_plane.ipv4_address
+    droplet_status = digitalocean_droplet.control_plane.status
   }
 }
 
@@ -82,7 +88,37 @@ resource "null_resource" "install_gateway_api_crds" {
     ]
   }
 
+  triggers = {
+    droplet_id     = digitalocean_droplet.control_plane.id
+    droplet_ip     = digitalocean_droplet.control_plane.ipv4_address
+    droplet_status = digitalocean_droplet.control_plane.status
+  }
+
   depends_on = [null_resource.wait_for_droplet]
+}
+
+# Configure MetalLB with public IP address
+resource "null_resource" "configure_metallb" {
+  connection {
+    type        = "ssh"
+    host        = digitalocean_droplet.control_plane.ipv4_address
+    user        = "root"
+    private_key = var.ssh_key
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "microk8s enable metallb:${digitalocean_reserved_ip_assignment.public_ip.ip_address}-${digitalocean_reserved_ip_assignment.public_ip.ip_address}"
+    ]
+  }
+
+  triggers = {
+    droplet_id     = digitalocean_droplet.control_plane.id
+    droplet_ip     = digitalocean_droplet.control_plane.ipv4_address
+    droplet_status = digitalocean_droplet.control_plane.status
+  }
+
+  depends_on = [digitalocean_reserved_ip_assignment.public_ip]
 }
 
 data "remote_file" "kubeconfig" {

@@ -11,26 +11,32 @@ terraform {
   }
 }
 
+locals {
+  name                           = "cert-manager"
+  cloudflare_api_key_secret_name = "cloudflare-api-key"
+  cloudflare_api_key_secret_key  = "apiKey"
+}
+
 resource "kubernetes_namespace_v1" "namespace" {
   metadata {
     labels = {
       deployedBy = "infra"
     }
 
-    name = var.name
+    name = local.name
   }
 }
 
 resource "helm_release" "cert_manager" {
-  name       = var.name
+  name       = local.name
   chart      = "cert-manager"
-  version    = var.cert_manager_version
-  namespace  = var.name
+  version    = var.chart_version
+  namespace  = local.name
   repository = "https://charts.jetstack.io"
 
   values = [
     yamlencode({
-      fullnameOverride = var.name
+      fullnameOverride = local.name
       crds = {
         enabled = true
       }
@@ -39,16 +45,6 @@ resource "helm_release" "cert_manager" {
         kind             = "ControllerConfiguration"
         enableGatewayAPI = true
       }
-      podLabels = {
-        "azure.workload.identity/use" = "true"
-      }
-      serviceAccount = {
-        labels = {
-          "azure.workload.identity/use" = "true"
-        }
-        annotations = {
-        }
-      }
     })
   ]
 
@@ -56,3 +52,52 @@ resource "helm_release" "cert_manager" {
     kubernetes_namespace_v1.namespace
   ]
 }
+
+resource "kubernetes_secret_v1" "cloudflare_api_key" {
+  metadata {
+    name      = local.cloudflare_api_key_secret_name
+    namespace = local.name
+  }
+
+  type = "Opaque"
+
+  data = {
+    (local.cloudflare_api_key_secret_key) = var.cloudflare_api_key
+  }
+
+  depends_on = [helm_release.cert_manager]
+}
+
+resource "kubernetes_manifest" "cert_manager_cluster_issuer" {
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "ClusterIssuer"
+    metadata = {
+      name = var.cluster_issuer
+    }
+    spec = {
+      acme = {
+        server = var.acme_server
+        email  = var.email
+        privateKeySecretRef = {
+          name = "letsencrypt-staging"
+        }
+        solvers = [
+          {
+            dns01 = {
+              cloudflare = {
+                apiTokenSecretRef = {
+                  name = kubernetes_secret_v1.cloudflare_api_key.metadata[0].name
+                  key  = local.cloudflare_api_key_secret_key
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+
+  depends_on = [kubernetes_secret_v1.cloudflare_api_key]
+}
+

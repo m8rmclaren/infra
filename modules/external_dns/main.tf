@@ -35,7 +35,7 @@ resource "kubernetes_secret_v1" "cloudflare_api_key" {
   type = "Opaque"
 
   data = {
-    cloudflare_api_key_secret_key = var.cloudflare_api_key
+    (local.cloudflare_api_key_secret_key) = var.cloudflare_api_key
   }
 }
 
