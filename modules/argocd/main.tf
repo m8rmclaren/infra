@@ -67,3 +67,47 @@ resource "helm_release" "argo_cd" {
     kubernetes_namespace_v1.argocd
   ]
 }
+
+resource "kubernetes_manifest" "argocd_http_route" {
+  manifest = {
+    apiVersion = "gateway.networking.k8s.io/v1"
+    kind       = "HTTPRoute"
+    metadata = {
+      name      = "argocd-route"
+      namespace = kubernetes_namespace_v1.argocd.metadata[0].name
+    }
+    spec = {
+      parentRefs = [
+        {
+          name      = var.gateway_name
+          namespace = var.gateway_namespace
+        }
+      ]
+      hostnames = [
+        var.hostname
+      ]
+      rules = [
+        {
+          matches = [
+            {
+              path = {
+                type  = "PathPrefix"
+                value = "/"
+              }
+            }
+          ]
+          backendRefs = [
+            {
+              name = "argocd-server"
+              port = 80
+            }
+          ]
+        }
+      ]
+    }
+  }
+
+  depends_on = [
+    helm_release.argo_cd
+  ]
+}

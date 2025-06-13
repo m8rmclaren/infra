@@ -113,7 +113,7 @@ jobs:
 
           if terraform -chdir=environments/prod/k8s state list >/dev/null 2>&1; then
               info_message "Terraform state exists - determining if this is a fresh cluster"
-              if [ "$(kubectl get ns -o json | jq '.items | length')" -eq 6 ]; then
+              if [ "$(kubectl get ns -o json | jq '.items | length')" -eq 5 ]; then
                   info_message "Determined that this is a fresh cluster."
                   kubectl cluster-info
 
