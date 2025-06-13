@@ -12,21 +12,22 @@ terraform {
   }
 }
 
+data "terraform_remote_state" "infra" {
+  backend = "s3"
+  config = {
+    bucket       = "m8rmclaren-terraform-state-infra"
+    key          = "prod/terraform.tfstate"
+    region       = "us-west-1"
+  }
+}
 
 provider "kubernetes" {
-  config_path = module.controlplane.kubeconfig
+  config_path = data.terraform_remote_state.infra.outputs.kubeconfig
 }
 
 provider "helm" {
   kubernetes = {
-    config_path = module.controlplane.kubeconfig
+  config_path = data.terraform_remote_state.infra.outputs.kubeconfig
   }
 }
 
-module "cert_manager" {
-  source               = "../../../modules/k8s/cert_manager"
-  name                 = "cert-manager"
-  cert_manager_version = "v1.18.0"
-
-  depends_on = [module.controlplane]
-}

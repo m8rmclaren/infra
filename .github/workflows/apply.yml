@@ -48,43 +48,43 @@ jobs:
         env:
           DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
 
-  # apply_k8s:
-  #   name: Apply K8s
-  #   runs-on: ubuntu-latest
-  #   needs:
-  #     - apply_infra
-  #   environment: prod
-  #   defaults:
-  #    run:
-  #      shell: bash
-  #   steps:
-  #     - uses: actions/checkout@v4
+  apply_k8s:
+    name: Apply K8s
+    runs-on: ubuntu-latest
+    needs:
+      - apply_infra
+    environment: prod
+    defaults:
+     run:
+       shell: bash
+    steps:
+      - uses: actions/checkout@v4
 
-  #     # Setup Terraform
-  #     - uses: hashicorp/setup-terraform@v3
-  #       with:
-  #         terraform_version: "v1.12.2"
+      # Setup Terraform
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "v1.12.2"
 
-  #     # Configure aws creds
-  #     - uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         aws-region: us-west-1
-  #         role-to-assume: arn:aws:iam::691595548805:role/github_actions_full_admin
+      # Configure aws creds
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-west-1
+          role-to-assume: arn:aws:iam::691595548805:role/github_actions_full_admin
 
-  #     - name: Terraform init
-  #       id: init
-  #       run: |
-  #         terraform -chdir=environments/prod/k8s init
+      - name: Terraform init
+        id: init
+        run: |
+          terraform -chdir=environments/prod/k8s init
 
-  #     - name: Terraform Format Check
-  #       run: |
-  #         terraform -chdir=environments/prod/k8s fmt -check
+      - name: Terraform Format Check
+        run: |
+          terraform -chdir=environments/prod/k8s fmt -check
 
-  #     - name: Terraform Validate
-  #       run: |
-  #         terraform -chdir=environments/prod/k8s validate
+      - name: Terraform Validate
+        run: |
+          terraform -chdir=environments/prod/k8s validate
 
-  #     - name: Terraform Apply
-  #       run: terraform apply -auto-approve
-  #       env:
-  #         DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+      # - name: Terraform Apply
+      #   env:
+      #     DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+      #   run: terraform apply -auto-approve
