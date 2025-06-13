@@ -31,8 +31,3 @@ provider "helm" {
   }
 }
 
-module "certmanager" {
-  source               = "../../../modules/cert_manager"
-  name                 = "cert-manager"
-  cert_manager_version = "v1.18.0"
-}

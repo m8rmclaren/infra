@@ -98,10 +98,10 @@ jobs:
           RED="\033[31m"
 
           info_message () {
-            local message="$1"
-            local mtype="INFO"
-            timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-            echo -e "${CYAN}${timestamp} [$mtype] ${RESET}$message"
+              local message="$1"
+              local mtype="INFO"
+              timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+              echo -e "${CYAN}${timestamp} [$mtype] ${RESET}$message"
           }
 
           info_message "Exporting kubeconfig to $kubeconfig_path"
@@ -109,20 +109,19 @@ jobs:
           export KUBECONFIG="$kubeconfig_path"
 
           if terraform -chdir=environments/prod/k8s output >/dev/null 2>&1; then
-            info_message "Terraform state for K8s Terraform project is empty - skipping to apply"
+              info_message "Terraform state exists - determining if this is a fresh cluster"
+              if [ "$(kubectl get ns -o json | jq '.items | length')" -eq 4 ]; then
+                  info_message "Determined that this is a fresh cluster."
+                  kubectl cluster-info
+
+                  info_message "Tainting k8s Terraform module"
+                  terraform -chdir=environments/prod/k8s taint
+              else
+                  info_message "This is not a fresh cluster - there are already resources in it. Skipping resource taint"
+              fi
           else
-            info_message "Terraform state exists - determining if this is a fresh cluster"
-            if [ "$(kubectl get ns -o json | jq '.items | length')" -eq 4 ]; then
-              info_message "Determined that this is a fresh cluster."
-              kubectl cluster-info
-
-              info_message "Tainting k8s Terraform module"
-              terraform -chdir=environments/prod/k8s taint
-            fi
+              info_message "Terraform state for K8s Terraform project is empty. Skipping to apply"
           fi
-
-          info_message "Running Terraform Init (k8s)"
-          terraform -chdir=environments/prod/k8s init -upgrade
 
           info_message "Running Terraform Apply (k8s)"
           terraform -chdir=environments/prod/k8s apply -var="kubeconfig=$kubeconfig_path" -auto-approve
