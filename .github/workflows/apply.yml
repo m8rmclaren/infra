@@ -74,6 +74,7 @@ jobs:
       - name: Terraform init
         id: init
         run: |
+          terraform -chdir=environments/prod/infra init # Kubeconfig is fetched out of infra state; needs initializing
           terraform -chdir=environments/prod/k8s init
 
       - name: Terraform Format Check
