@@ -84,7 +84,44 @@ jobs:
         run: |
           terraform -chdir=environments/prod/k8s validate
 
-      # - name: Terraform Apply
-      #   env:
-      #     DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
-      #   run: terraform apply -auto-approve
+      - name: Terraform Apply
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+        run: |
+          kubeconfig_path="/tmp/kubeconfig"
+
+          BOLD="\033[1m"
+          RESET="\033[0m"
+          CYAN="\033[36m"
+          ORANGE="\033[0;33m"
+          RED="\033[31m"
+
+          info_message () {
+            local message="$1"
+            local mtype="INFO"
+            timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+            echo -e "${CYAN}${timestamp} [$mtype] ${RESET}$message"
+          }
+
+          info_message "Exporting kubeconfig to $kubeconfig_path"
+          terraform -chdir=environments/prod/infra output -raw kubeconfig > "$kubeconfig_path"
+          export KUBECONFIG="$kubeconfig_path"
+
+          if terraform -chdir=environments/prod/k8s output >/dev/null 2>&1; then
+            info_message "Terraform state for K8s Terraform project is empty - skipping to apply"
+          else
+            info_message "Terraform state exists - determining if this is a fresh cluster"
+            if [ "$(kubectl get ns -o json | jq '.items | length')" -eq 4 ]; then
+              info_message "Determined that this is a fresh cluster."
+              kubectl cluster-info
+
+              info_message "Tainting k8s Terraform module"
+              terraform -chdir=environments/prod/k8s taint
+            fi
+          fi
+
+          info_message "Running Terraform Init (k8s)"
+          terraform -chdir=environments/prod/k8s init -upgrade
+
+          info_message "Running Terraform Apply (k8s)"
+          terraform -chdir=environments/prod/k8s apply -var="kubeconfig=$kubeconfig_path" -auto-approve

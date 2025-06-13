@@ -43,7 +43,7 @@ resource "digitalocean_reserved_ip" "primary" {
 }
 
 module "controlplane" {
-  source = "../../../modules/k8s/controlplane"
+  source = "../../../modules/controlplane"
   region = local.do_region
   # droplet_size = "s-1vcpu-1gb"
   droplet_size = "s-2vcpu-2gb"
