@@ -115,7 +115,7 @@ jobs:
                   kubectl cluster-info
 
                   info_message "Tainting k8s Terraform module"
-                  terraform -chdir=environments/prod/k8s taint
+                  terraform -chdir=environments/prod/k8s state list | xargs -n1 -I{} sh -c 'terraform -chdir=environments/prod/k8s taint "{}" || echo "Skipping {}"'
               else
                   info_message "This is not a fresh cluster - there are already resources in it. Skipping resource taint"
               fi
