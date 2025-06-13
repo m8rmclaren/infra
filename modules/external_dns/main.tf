@@ -12,10 +12,11 @@ terraform {
 }
 
 locals {
-  cloudflare-api-key-secret-name = "cloudflare-api-key"
+  cloudflare_api_key_secret_name = "cloudflare-api-key"
+  cloudflare_api_key_secret_key  = "apiKey"
 }
 
-resource "kubernetes_namespace_v1" "namespace" {
+resource "kubernetes_namespace_v1" "external_dns" {
   metadata {
     labels = {
       deployedBy = "infra"
@@ -25,15 +26,57 @@ resource "kubernetes_namespace_v1" "namespace" {
   }
 }
 
-resource "kubernetes_secret_v1" "cloudflare-api-key" {
+resource "kubernetes_secret_v1" "cloudflare_api_key" {
   metadata {
-    name      = local.cloudflare-api-key-secret-name
-    namespace = kubernetes_namespace_v1.namespace.metadata[0].name
+    name      = local.cloudflare_api_key_secret_name
+    namespace = kubernetes_namespace_v1.external_dns.metadata[0].name
   }
 
   type = "Opaque"
 
   data = {
-    username = "admin"
+    cloudflare_api_key_secret_key = var.cloudflare_api_key
   }
 }
+
+resource "helm_release" "external_dns" {
+  name       = var.name
+  chart      = "external-dns"
+  version    = var.external_dns_version
+  namespace  = kubernetes_namespace_v1.external_dns.metadata[0].name
+  repository = "https://kubernetes-sigs.github.io/external-dns"
+
+  values = [
+    yamlencode({
+      fullnameOverride = var.name
+
+      env = [
+        {
+          name = "CF_API_TOKEN"
+          valueFrom = {
+            secretKeyRef = {
+              name = kubernetes_secret_v1.cloudflare_api_key.metadata[0].name
+              key  = local.cloudflare_api_key_secret_key
+            }
+          }
+        }
+      ]
+
+      provider = {
+        name = "cloudflare"
+      }
+
+      policy = "sync"
+
+      extraArgs = [
+        "--source=gateway-httproute"
+      ]
+    })
+  ]
+
+  depends_on = [
+    kubernetes_namespace_v1.external_dns,
+    kubernetes_secret_v1.cloudflare_api_key,
+  ]
+}
+
