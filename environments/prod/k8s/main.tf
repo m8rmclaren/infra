@@ -34,5 +34,12 @@ provider "helm" {
 module "certmanager" {
   source               = "../../../modules/cert_manager"
   name                 = "cert-manager"
-  cert_manager_version = "v1.18.0"
+  cert_manager_version = "v1.18.0" # Latest as of 6/13/25
+}
+
+module "externaldns" {
+  source               = "../../../modules/external_dns"
+  name                 = "external-dns"
+  external_dns_version = "1.16.1" # Latest as of 6/13/25
+  cloudflare_api_key   = var.cloudflare_api_key
 }
