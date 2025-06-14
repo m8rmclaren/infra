@@ -9,6 +9,14 @@ terraform {
       source  = "hashicorp/helm"
       version = "3.0.0-pre2"
     }
+    kubectl = {
+      source  = "alekc/kubectl"
+      version = ">= 2.0.2"
+    }
+    github = {
+      source  = "integrations/github"
+      version = "6.6.0"
+    }
   }
 }
 
@@ -26,16 +34,12 @@ provider "helm" {
   }
 }
 
-module "istio" {
-  source        = "../../../modules/istio"
-  chart_version = "1.26.1" # Latest as of 6/13/25
-  replicas      = 1
+provider "kubectl" {
+  config_path = var.kubeconfig
 }
 
-module "externaldns" {
-  source               = "../../../modules/external_dns"
-  cloudflare_api_key   = var.cloudflare_api_key
-  external_dns_version = "1.16.1" # Latest as of 6/13/25
+provider "github" {
+  token = var.github_pat
 }
 
 module "certmanager" {
@@ -49,12 +53,6 @@ module "certmanager" {
   email       = var.email
 }
 
-module "gateway" {
-  source         = "../../../modules/gateway"
-  domain         = var.domain
-  cluster_issuer = local.cluster_issuer_name
-}
-
 module "argocd" {
   source                              = "../../../modules/argocd"
   chart_version                       = "8.0.17" # Latest as of 6/13/25
@@ -63,6 +61,9 @@ module "argocd" {
   server_min_replicas                 = 1
   repo_server_min_replicas            = 1
   hostname                            = "argocd.${var.domain}"
-  gateway_name                        = module.gateway.gateway_name
-  gateway_namespace                   = module.gateway.gateway_namespace
+  cluster_issuer                      = local.cluster_issuer_name
+  github_org                          = "m8rmclaren"
+  gitops_repository_name              = "infra-gitops"
+
+  depends_on = [module.certmanager]
 }

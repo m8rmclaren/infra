@@ -91,6 +91,7 @@ jobs:
           TF_VAR_cloudflare_api_key: ${{ secrets.CLOUDFLARE_API_KEY }}
           TF_VAR_email: ${{ secrets.EMAIL }}
           TF_VAR_domain: ${{ secrets.DOMAIN }}
+          TF_VAR_github_pat: ${{ secrets.GH_PAT }}
         run: |
           kubeconfig_path="/tmp/kubeconfig"
 

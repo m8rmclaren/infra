@@ -20,8 +20,11 @@ resource "digitalocean_droplet" "control_plane" {
 
   vpc_uuid = var.vpc_uuid
 
-  ssh_keys  = [var.ssh_key_id]
-  user_data = file("${path.module}/cloud-init.yaml")
+  ssh_keys = [var.ssh_key_id]
+  user_data = templatefile("${path.module}/cloud-init.yaml.tpl", {
+    reserved_ip     = var.public_ip
+    kubeconfig_path = local.kubectl_path
+  })
 
   monitoring = true
 
@@ -50,12 +53,6 @@ resource "null_resource" "wait_for_droplet" {
     ]
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "microk8s config > ${local.kubectl_path}"
-    ]
-  }
-
   depends_on = [digitalocean_droplet.control_plane]
 
   triggers = {
@@ -71,54 +68,6 @@ resource "digitalocean_reserved_ip_assignment" "public_ip" {
   ip_address = var.public_ip
 
   depends_on = [null_resource.wait_for_droplet]
-}
-
-# Install the Gateway API CRDs
-resource "null_resource" "install_gateway_api_crds" {
-  connection {
-    type        = "ssh"
-    host        = digitalocean_droplet.control_plane.ipv4_address
-    user        = "root"
-    private_key = var.ssh_key
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "microk8s kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/standard-install.yaml"
-    ]
-  }
-
-  triggers = {
-    droplet_id     = digitalocean_droplet.control_plane.id
-    droplet_ip     = digitalocean_droplet.control_plane.ipv4_address
-    droplet_status = digitalocean_droplet.control_plane.status
-  }
-
-  depends_on = [null_resource.wait_for_droplet]
-}
-
-# Configure MetalLB with public IP address
-resource "null_resource" "configure_metallb" {
-  connection {
-    type        = "ssh"
-    host        = digitalocean_droplet.control_plane.ipv4_address
-    user        = "root"
-    private_key = var.ssh_key
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "microk8s enable metallb:${digitalocean_reserved_ip_assignment.public_ip.ip_address}-${digitalocean_reserved_ip_assignment.public_ip.ip_address}"
-    ]
-  }
-
-  triggers = {
-    droplet_id     = digitalocean_droplet.control_plane.id
-    droplet_ip     = digitalocean_droplet.control_plane.ipv4_address
-    droplet_status = digitalocean_droplet.control_plane.status
-  }
-
-  depends_on = [digitalocean_reserved_ip_assignment.public_ip]
 }
 
 data "remote_file" "kubeconfig" {

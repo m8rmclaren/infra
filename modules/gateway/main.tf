@@ -1,3 +1,10 @@
+# module "gateway" {
+#   source         = "../../../modules/gateway"
+#   domain         = var.domain
+#   cluster_issuer = local.cluster_issuer_name
+#   gateway_class  = "istio"
+# }
+
 terraform {
   required_providers {
     kubernetes = {
@@ -31,7 +38,7 @@ resource "kubernetes_manifest" "gateway" {
       }
     }
     spec = {
-      gatewayClassName = "istio"
+      gatewayClassName = var.gateway_class
       listeners = [
         {
           name     = "http"

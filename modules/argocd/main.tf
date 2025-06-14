@@ -8,7 +8,15 @@ terraform {
       source  = "hashicorp/helm"
       version = "3.0.0-pre2"
     }
+    github = {
+      source  = "integrations/github"
+      version = "6.6.0"
+    }
   }
+}
+
+locals {
+  name = "argo-cd"
 }
 
 resource "kubernetes_namespace_v1" "argocd" {
@@ -17,21 +25,24 @@ resource "kubernetes_namespace_v1" "argocd" {
       deployedBy = "infra"
     }
 
-    name = var.name
+    name = local.name
   }
 }
 
 resource "helm_release" "argo_cd" {
-  name       = var.name
+  name       = local.name
   chart      = "argo-cd"
   version    = var.chart_version
   namespace  = kubernetes_namespace_v1.argocd.metadata[0].name
   repository = "https://argoproj.github.io/argo-helm"
 
   values = [yamlencode({
+    fullnameOverride = local.name
+
     crds = {
       install = true
     }
+
 
     configs = {
       params = {
@@ -53,6 +64,21 @@ resource "helm_release" "argo_cd" {
         enabled  = false
         replicas = var.server_min_replicas
       }
+      # Conditionally add the ingress block only if gateway_name and gateway_namespace are empty
+      ingress = (
+        var.gateway_name == "" && var.gateway_namespace == "" ?
+        {
+          enabled = true
+          annotations = {
+            "cert-manager.io/cluster-issuer" = var.cluster_issuer
+          }
+          controller       = "generic"
+          ingressClassName = "nginx"
+          hostname         = var.hostname
+          tls              = true
+        } :
+        null
+      )
     }
 
     repoServer = {
@@ -69,11 +95,16 @@ resource "helm_release" "argo_cd" {
 }
 
 resource "kubernetes_manifest" "argocd_http_route" {
+  count = (
+    var.gateway_name != "" &&
+    var.gateway_namespace != ""
+  ) ? 1 : 0
+
   manifest = {
     apiVersion = "gateway.networking.k8s.io/v1"
     kind       = "HTTPRoute"
     metadata = {
-      name      = "argocd-route"
+      name      = local.name
       namespace = kubernetes_namespace_v1.argocd.metadata[0].name
     }
     spec = {
@@ -98,7 +129,7 @@ resource "kubernetes_manifest" "argocd_http_route" {
           ]
           backendRefs = [
             {
-              name = "argocd-server"
+              name = "${local.name}-server"
               port = 80
             }
           ]

@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/helm"
       version = "3.0.0-pre2"
     }
+    kubectl = {
+      source  = "alekc/kubectl"
+      version = ">= 2.0.2"
+    }
   }
 }
 
@@ -17,7 +21,7 @@ locals {
   cloudflare_api_key_secret_key  = "apiKey"
 }
 
-resource "kubernetes_namespace_v1" "namespace" {
+resource "kubernetes_namespace_v1" "cert_manager" {
   metadata {
     labels = {
       deployedBy = "infra"
@@ -31,12 +35,13 @@ resource "helm_release" "cert_manager" {
   name       = local.name
   chart      = "cert-manager"
   version    = var.chart_version
-  namespace  = local.name
+  namespace  = kubernetes_namespace_v1.cert_manager.metadata[0].name
   repository = "https://charts.jetstack.io"
 
   values = [
     yamlencode({
       fullnameOverride = local.name
+
       crds = {
         enabled = true
       }
@@ -49,14 +54,14 @@ resource "helm_release" "cert_manager" {
   ]
 
   depends_on = [
-    kubernetes_namespace_v1.namespace
+    kubernetes_namespace_v1.cert_manager
   ]
 }
 
 resource "kubernetes_secret_v1" "cloudflare_api_key" {
   metadata {
     name      = local.cloudflare_api_key_secret_name
-    namespace = local.name
+    namespace = kubernetes_namespace_v1.cert_manager.metadata[0].name
   }
 
   type = "Opaque"
@@ -65,11 +70,13 @@ resource "kubernetes_secret_v1" "cloudflare_api_key" {
     (local.cloudflare_api_key_secret_key) = var.cloudflare_api_key
   }
 
-  depends_on = [helm_release.cert_manager]
+  depends_on = [kubernetes_namespace_v1.cert_manager, helm_release.cert_manager]
 }
 
-resource "kubernetes_manifest" "cert_manager_cluster_issuer" {
-  manifest = {
+resource "kubectl_manifest" "cert_manager_cluster_issuer" {
+  validate_schema = false
+
+  yaml_body = yamlencode({
     apiVersion = "cert-manager.io/v1"
     kind       = "ClusterIssuer"
     metadata = {
@@ -96,7 +103,7 @@ resource "kubernetes_manifest" "cert_manager_cluster_issuer" {
         ]
       }
     }
-  }
+  })
 
   depends_on = [kubernetes_secret_v1.cloudflare_api_key]
 }

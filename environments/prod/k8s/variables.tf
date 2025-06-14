@@ -19,3 +19,9 @@ variable "cloudflare_api_key" {
   sensitive   = true
 }
 
+variable "github_pat" {
+  type        = string
+  description = "Github PAT (must have repo scope)"
+  sensitive   = true
+}
+

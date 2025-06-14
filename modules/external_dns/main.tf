@@ -1,3 +1,11 @@
+# module "externaldns" {
+#   source               = "../../../modules/external_dns"
+#   cloudflare_api_key   = var.cloudflare_api_key
+#   external_dns_version = "1.16.1" # Latest as of 6/13/25
+
+#   depends_on = [module.istio]
+# }
+
 terraform {
   required_providers {
     kubernetes = {
