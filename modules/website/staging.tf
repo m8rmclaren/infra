@@ -66,7 +66,7 @@ module "website_staging" {
   }
 
   depends_on = [
-    kubernetes_manifest.argo_appproject,
+    kubectl_manifest.argo_appproject,
     kubernetes_namespace_v1.staging,
     module.staging_domain
   ]

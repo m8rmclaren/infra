@@ -66,10 +66,10 @@ module "certmanager" {
   chart_version      = "1.18.0"
   cluster_issuer     = local.cluster_issuer_name
   cloudflare_api_key = var.cloudflare_api_token
-  # acme_server        = "https://acme-v02.api.letsencrypt.org/directory"
-  acme_server = "https://acme-staging-v02.api.letsencrypt.org/directory"
-  domain      = var.domain
-  email       = var.email
+  acme_server        = "https://acme-v02.api.letsencrypt.org/directory"
+  # acme_server = "https://acme-staging-v02.api.letsencrypt.org/directory"
+  domain = var.domain
+  email  = var.email
 }
 
 locals {

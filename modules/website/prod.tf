@@ -78,7 +78,7 @@ module "website_prod" {
   }
 
   depends_on = [
-    kubernetes_manifest.argo_appproject,
+    kubectl_manifest.argo_appproject,
     kubernetes_namespace_v1.prod,
     module.prod_domain
   ]

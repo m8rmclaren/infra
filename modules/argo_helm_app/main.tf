@@ -1,14 +1,16 @@
 terraform {
   required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.37.1"
+    kubectl = {
+      source  = "alekc/kubectl"
+      version = ">= 2.0.2"
     }
   }
 }
 
-resource "kubernetes_manifest" "argo_application" {
-  manifest = {
+resource "kubectl_manifest" "argo_application" {
+  validate_schema = false
+
+  yaml_body = yamlencode({
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "Application"
     metadata = {
@@ -32,5 +34,5 @@ resource "kubernetes_manifest" "argo_application" {
       }
       syncPolicy = var.sync_policy
     }
-  }
+  })
 }
