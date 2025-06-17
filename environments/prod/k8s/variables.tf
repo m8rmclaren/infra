@@ -13,10 +13,15 @@ variable "kubeconfig" {
   description = "Path to kubeconfig"
 }
 
-variable "cloudflare_api_key" {
+variable "cloudflare_api_token" {
   type        = string
-  description = "Cloudflare API Key"
+  description = "Cloudflare API Token"
   sensitive   = true
+}
+
+variable "github_email" {
+  type        = string
+  description = "Email associated with Github account that owns github_pat"
 }
 
 variable "github_pat" {

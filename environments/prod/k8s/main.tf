@@ -17,11 +17,25 @@ terraform {
       source  = "integrations/github"
       version = "6.6.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5"
+    }
+  }
+}
+
+data "terraform_remote_state" "infra" {
+  backend = "s3"
+  config = {
+    bucket = "m8rmclaren-terraform-state-infra"
+    key    = "prod/terraform.tfstate"
+    region = "us-west-1"
   }
 }
 
 locals {
   cluster_issuer_name = "letsencrypt"
+  public_ip           = data.terraform_remote_state.infra.outputs.public_ip
 }
 
 provider "kubernetes" {
@@ -42,19 +56,38 @@ provider "github" {
   token = var.github_pat
 }
 
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}
+
 module "certmanager" {
-  source             = "../../../modules/cert_manager"
+  source = "../../../modules/cert_manager"
+
   chart_version      = "1.18.0"
   cluster_issuer     = local.cluster_issuer_name
-  cloudflare_api_key = var.cloudflare_api_key
+  cloudflare_api_key = var.cloudflare_api_token
   # acme_server        = "https://acme-v02.api.letsencrypt.org/directory"
   acme_server = "https://acme-staging-v02.api.letsencrypt.org/directory"
   domain      = var.domain
   email       = var.email
 }
 
+locals {
+  argocd_subdomain = "argocd"
+}
+
+module "argocdsubdomain" {
+  source = "../../../modules/domain"
+
+  domain     = var.domain
+  subdomain  = local.argocd_subdomain
+  ip_address = local.public_ip
+  proxied    = true
+}
+
 module "argocd" {
-  source                              = "../../../modules/argocd"
+  source = "../../../modules/argocd"
+
   chart_version                       = "8.0.17" # Latest as of 6/13/25
   application_controller_replicas     = 1
   application_set_controller_replicas = 1
@@ -65,5 +98,24 @@ module "argocd" {
   github_org                          = "m8rmclaren"
   gitops_repository_name              = "infra-gitops"
 
-  depends_on = [module.certmanager]
+  depends_on = [module.certmanager, module.argocdsubdomain]
+}
+
+module "website" {
+  source = "../../../modules/website"
+
+  domain     = var.domain
+  ip_address = local.public_ip
+
+  cluster_issuer = local.cluster_issuer_name
+
+  github_email = var.github_email
+  github_token = var.github_pat
+
+  argocd_namespace        = module.argocd.argocd_namespace
+  gitops_repo             = module.argocd.repo_name
+  path_to_stage_manifests = "dev/website"
+  path_to_prod_manifests  = "prod/website"
+
+  depends_on = [module.argocd]
 }

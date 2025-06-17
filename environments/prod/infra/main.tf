@@ -57,3 +57,7 @@ output "kubeconfig" {
   value     = module.controlplane.kubeconfig
   sensitive = true
 }
+
+output "public_ip" {
+  value = digitalocean_reserved_ip.primary.ip_address
+}
