@@ -4,7 +4,7 @@ module "staging_domain" {
   domain     = var.domain
   subdomain  = local.stage_subdomain
   ip_address = var.ip_address
-  proxied    = true
+  proxied    = false
 }
 
 resource "kubernetes_namespace_v1" "staging" {

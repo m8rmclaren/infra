@@ -3,7 +3,7 @@ module "prod_domain" {
 
   domain     = var.domain
   ip_address = var.ip_address
-  proxied    = true
+  proxied    = false
 }
 
 module "prod_www" {
