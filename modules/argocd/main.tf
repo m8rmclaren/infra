@@ -43,11 +43,15 @@ resource "helm_release" "argo_cd" {
       install = true
     }
 
-
     configs = {
       params = {
         "server.insecure"        = true
         "application.namespaces" = "*"
+      }
+      secret = {
+        # htpasswd -nbBC 10 "" $ARGO_PWD | tr -d ':\n' | sed 's/$2y/$2a/' | pbcopy
+        argocdServerAdminPassword = "$2a$10$IHGMIO64MlfQb6HdSZa4COFh0kHDpjSnKaWW1gcJRL8.v2f5mK30W"
+
       }
     }
 
