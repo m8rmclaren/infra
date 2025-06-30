@@ -45,7 +45,8 @@ resource "digitalocean_reserved_ip" "primary" {
 module "controlplane" {
   source       = "../../../modules/controlplane"
   region       = local.do_region
-  droplet_size = "s-1vcpu-2gb"
+  droplet_size = "s-1vcpu-2gb-70gb-intel"
+  # droplet_size = "s-1vcpu-2gb"
   # droplet_size = "s-2vcpu-4gb"
   ssh_key_id = digitalocean_ssh_key.primary.id
   ssh_key    = tls_private_key.primary.private_key_openssh
