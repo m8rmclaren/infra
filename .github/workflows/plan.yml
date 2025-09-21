@@ -76,9 +76,10 @@ jobs:
           if terraform -chdir=environments/prod/infra output -raw kubeconfig > "$kubeconfig_path" 2>&1; then
               echo "Infra state contains kubeconfig"
               export KUBECONFIG="$kubeconfig_path"
-              terraform -chdir=environments/prod/k8s plan -no-color
+              terraform -chdir=environments/prod/k8s plan -no-color -var="kubeconfig=$kubeconfig_path"
           else
-              terraform -chdir=environments/prod/k8s plan -no-color
+              # TODO
+              echo "Infra state has no kubeconfig"
           fi
 
 
