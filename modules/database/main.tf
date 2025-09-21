@@ -54,9 +54,9 @@ resource "kubernetes_secret_v1" "postgres_database_secret" {
   type = "Opaque"
 
   data = {
-    local.postgres_password_key             = var.postgres_admin_password
-    local.postgres_replication_password_key = var.postgres_replication_password
-    local.hydra_password_key                = var.hydra_database_password
+    (local.postgres_password_key)             = var.postgres_admin_password
+    (local.postgres_replication_password_key) = var.postgres_replication_password
+    (local.hydra_password_key)                = var.hydra_database_password
   }
 }
 
