@@ -93,6 +93,9 @@ jobs:
           TF_VAR_domain: ${{ secrets.DOMAIN }}
           TF_VAR_github_email: ${{ secrets.EMAIL }}
           TF_VAR_github_pat: ${{ secrets.GH_PAT }}
+          TF_VAR_postgres_admin_password: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          TF_VAR_postgres_replication_password: ${{ secrets.POSTGRES_REPLICATION_PASSWORD }}
+          TF_VAR_hydra_database_password: ${{ secrets.HYDRA_DATABASE_PASSWORD }}
         run: |
           kubeconfig_path="/tmp/kubeconfig"
 

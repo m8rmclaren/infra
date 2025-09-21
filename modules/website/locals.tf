@@ -7,6 +7,9 @@ locals {
 
   ghcr_pull_secret = "regcred"
 
+  path_to_stage_manifests = "dev/website"
+  path_to_prod_manifests  = "prod/website"
+
   securityContext = {
     capabilities = {
       drop = ["ALL"]

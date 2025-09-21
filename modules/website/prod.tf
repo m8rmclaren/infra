@@ -47,7 +47,7 @@ module "website_prod" {
   application_name      = "website-prod"
   destination_namespace = "website-prod"
   repo                  = var.gitops_repo
-  path_to_manifests     = var.path_to_prod_manifests
+  path_to_manifests     = local.path_to_prod_manifests
 
   sync_policy = {
     automated = {

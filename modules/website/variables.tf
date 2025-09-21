@@ -1,6 +1,6 @@
 variable "argocd_namespace" {
   type        = string
-  description = "The namespace where ArgoCD is deployed"
+  description = "The namespace where ArgoCD is deployed - AppProj deployed in this ns"
 }
 
 variable "destination_server" {
@@ -38,15 +38,5 @@ variable "ip_address" {
 variable "gitops_repo" {
   type        = string
   description = "Git URL (or other) to the GitOps repo containing the stage and prod Helm chart"
-}
-
-variable "path_to_stage_manifests" {
-  type        = string
-  description = "The path to the Helm chart containing the staging Helm chart"
-}
-
-variable "path_to_prod_manifests" {
-  type        = string
-  description = "The path to the Helm chart containing the prod Helm chart"
 }
 

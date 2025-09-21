@@ -30,3 +30,20 @@ variable "github_pat" {
   sensitive   = true
 }
 
+variable "postgres_admin_password" {
+  type        = string
+  description = "The admin password for the Postgres database"
+  sensitive   = true
+}
+
+variable "postgres_replication_password" {
+  type        = string
+  description = "The replication password for the Postgres database"
+  sensitive   = true
+}
+
+variable "hydra_database_password" {
+  type        = string
+  description = "The password for the Hydra database in Postgres"
+  sensitive   = true
+}

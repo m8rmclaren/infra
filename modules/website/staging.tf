@@ -39,7 +39,7 @@ module "website_staging" {
   application_name      = "website-staging"
   destination_namespace = "website-staging"
   repo                  = var.gitops_repo
-  path_to_manifests     = var.path_to_stage_manifests
+  path_to_manifests     = local.path_to_stage_manifests
 
   sync_policy = {
     automated = {
