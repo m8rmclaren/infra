@@ -115,6 +115,8 @@ module "database" {
   hydra_database_name     = "hydra_db"
   hydra_database_username = "hydra"
   hydra_database_password = var.hydra_database_password
+
+  depends_on = [module.argocd]
 }
 
 module "website" {
@@ -131,5 +133,5 @@ module "website" {
   argocd_namespace = module.argocd.argocd_namespace
   gitops_repo      = module.argocd.repo_name
 
-  depends_on = [module.argocd]
+  depends_on = [module.database, module.argocd]
 }
