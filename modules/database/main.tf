@@ -81,7 +81,7 @@ module "website_prod" {
     # https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#values
     valuesObject = {
       fullnameOverride = local.name
-      postgres = {
+      postgresql = {
         fullnameOverride = local.name
         auth = {
           enablePostgresUser  = true
