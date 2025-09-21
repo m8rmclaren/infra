@@ -5,7 +5,7 @@ locals {
 
   postgres_secret_name = "postgres-passwords"
 
-  postgres_password_key             = "postgres-password"
+  postgres_password_key             = "POSTGRES_PASSWORD"
   postgres_replication_password_key = "replication-password"
   hydra_password_key                = "HYDRA_PASSWORD"
 
