@@ -35,7 +35,7 @@ resource "kubectl_manifest" "argo_appproject" {
   })
 }
 
-resource "kubernetes_namespace_v1" "prod" {
+resource "kubernetes_namespace_v1" "database" {
   metadata {
     labels = {
       deployedBy = "infra"
@@ -81,11 +81,44 @@ module "website_prod" {
     # https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#values
     valuesObject = {
       fullnameOverride = local.name
+      postgres = {
+        fullnameOverride = local.name
+        auth = {
+          enablePostgresUser  = true
+          replicationUsername = "repl-user"
+          existingSecret      = local.postgres_secret_name
+          secretKeys = {
+            adminPasswordKey       = local.postgres_password_key
+            replicationPasswordKey = local.postgres_replication_password_key
+          }
+        }
+        primary = {
+          extraEnvVarsSecret = local.postgres_secret_name
+          initdb = {
+            scripts = {
+              "init-user-db.sh" = <<-EOT
+                #!/bin/bash
+                set -e
+                export PGPASSWORD="${"$"}${local.postgres_password_key}"
+                psql -v ON_ERROR_STOP=1 --username "$POSTGRESQL_USERNAME" <<-EOSQL
+                  CREATE DATABASE ${var.hydra_database_name};
+                  CREATE USER ${var.hydra_database_username} WITH PASSWORD '${"$"}${local.hydra_password_key}';
+                  GRANT ALL PRIVILEGES ON DATABASE ${var.hydra_database_name} TO ${var.hydra_database_username};
+
+                  \\c ${var.hydra_database_name}
+                  GRANT USAGE, CREATE ON SCHEMA public TO ${var.hydra_database_username};
+                  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${var.hydra_database_username};
+                EOSQL
+              EOT
+            }
+          }
+        }
+      }
     }
   }
 
   depends_on = [
     kubectl_manifest.argo_appproject,
-    kubernetes_namespace_v1.prod,
+    kubernetes_namespace_v1.database,
   ]
 }

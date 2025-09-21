@@ -32,6 +32,16 @@ variable "postgres_replication_password" {
   sensitive   = true
 }
 
+variable "hydra_database_name" {
+  description = "Hydra DB name."
+  type        = string
+}
+
+variable "hydra_database_username" {
+  description = "Hydra DB username."
+  type        = string
+}
+
 variable "hydra_database_password" {
   description = "Hydra DB password."
   type        = string

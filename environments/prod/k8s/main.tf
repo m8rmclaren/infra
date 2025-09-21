@@ -111,7 +111,10 @@ module "database" {
 
   postgres_admin_password       = var.postgres_admin_password
   postgres_replication_password = var.postgres_replication_password
-  hydra_database_password       = var.hydra_database_password
+
+  hydra_database_name     = "hydra_db"
+  hydra_database_username = "hydra"
+  hydra_database_password = var.hydra_database_password
 }
 
 module "website" {
