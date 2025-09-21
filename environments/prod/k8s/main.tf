@@ -101,6 +101,22 @@ module "argocd" {
   depends_on = [module.certmanager, module.argocdsubdomain]
 }
 
+module "database" {
+  source = "../../../modules/database"
+
+  argocd_namespace = module.argocd.argocd_namespace
+  gitops_repo      = module.argocd.repo_name
+
+  destination_namespace = "database"
+
+  postgres_admin_password       = var.postgres_admin_password
+  postgres_replication_password = var.postgres_replication_password
+
+  hydra_database_name     = "hydra_db"
+  hydra_database_username = "hydra"
+  hydra_database_password = var.hydra_database_password
+}
+
 module "website" {
   source = "../../../modules/website"
 
@@ -112,10 +128,8 @@ module "website" {
   github_email = var.github_email
   github_token = var.github_pat
 
-  argocd_namespace        = module.argocd.argocd_namespace
-  gitops_repo             = module.argocd.repo_name
-  path_to_stage_manifests = "dev/website"
-  path_to_prod_manifests  = "prod/website"
+  argocd_namespace = module.argocd.argocd_namespace
+  gitops_repo      = module.argocd.repo_name
 
   depends_on = [module.argocd]
 }

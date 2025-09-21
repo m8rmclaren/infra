@@ -25,6 +25,6 @@ runcmd:
   - microk8s status --wait-ready
   - |
       ufw default allow routed
-  - microk8s enable dns ingress
+  - microk8s enable dns ingress hostpath-storage
   - microk8s config > ${kubeconfig_path}
   - echo "ok" > /var/lib/cloud/instance/user-data.success

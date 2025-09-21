@@ -7,6 +7,7 @@ on:
 permissions:
   id-token: write
   contents: write
+  pull-requests: write
 
 jobs:
   plan:
@@ -16,7 +17,6 @@ jobs:
     defaults:
      run:
        shell: bash
-       working-directory: ./environments/prod # TODO different paths for target env
     steps:
       - uses: actions/checkout@v4
 
@@ -33,26 +33,68 @@ jobs:
 
       - name: Terraform init
         id: init
-        run: terraform init
+        run: |
+          terraform -chdir=environments/prod/infra init # Kubeconfig is fetched out of infra state; needs initializing
+          terraform -chdir=environments/prod/k8s init
 
       - name: Terraform Format Check
-        run: terraform fmt -check
+        run: |
+          terraform -chdir=environments/prod/infra fmt -check
+          terraform -chdir=environments/prod/k8s fmt -check
 
       - name: Terraform Validate
-        run: terraform validate
+        run: |
+          terraform -chdir=environments/prod/infra validate
+          terraform -chdir=environments/prod/k8s validate
 
-      - name: Terraform Plan
-        run: terraform plan -no-color
-        continue-on-error: true
-        id: plan
+      - name: Terraform Plan (infra)
+        id: infra_plan
+        run: terraform -chdir=environments/prod/infra plan -no-color
         env:
           DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+
+      - name: Terraform Plan (k8s)
+        continue-on-error: true
+        id: k8s_plan
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_email: ${{ secrets.EMAIL }}
+          TF_VAR_domain: ${{ secrets.DOMAIN }}
+          TF_VAR_github_email: ${{ secrets.EMAIL }}
+          TF_VAR_github_pat: ${{ secrets.GH_PAT }}
+          TF_VAR_postgres_admin_password: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          TF_VAR_postgres_replication_password: ${{ secrets.POSTGRES_REPLICATION_PASSWORD }}
+          TF_VAR_hydra_database_password: ${{ secrets.HYDRA_DATABASE_PASSWORD }}
+        run: |
+          kubeconfig_path="/tmp/kubeconfig"
+
+          # Terraform kubernetes modules support KUBECONFIG env var - read 
+          # kubeconfig from tf state & specify its location
+          terraform -chdir=environments/prod/infra output -raw kubeconfig > "$kubeconfig_path"
+
+          if terraform -chdir=environments/prod/infra output -raw kubeconfig > "$kubeconfig_path" 2>&1; then
+              echo "Infra state contains kubeconfig"
+              export KUBECONFIG="$kubeconfig_path"
+              terraform -chdir=environments/prod/k8s plan -no-color -var="kubeconfig=$kubeconfig_path"
+          else
+              # TODO
+              echo "Infra state has no kubeconfig"
+          fi
+
 
       - name: Comment Plan on PR
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           message: |
             ### Terraform Plan Result
+            
+            ## Infrastructure (prod/infra)
             ```
-            ${{ steps.plan.outputs.stdout }}
+            ${{ steps.infra_plan.outputs.stdout }}
+            ```
+
+            ## K8s (prod/k8s)
+            ```
+            ${{ steps.k8s_plan.outputs.stdout }}
             ```
