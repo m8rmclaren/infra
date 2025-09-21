@@ -23,12 +23,12 @@ resource "kubectl_manifest" "argo_appproject" {
       namespace = var.argocd_namespace
     }
     spec = {
-      sourceNamespaces = [local.destination_namespace]
+      sourceNamespaces = [var.destination_namespace]
       sourceRepos      = [var.gitops_repo]
       destinations = [
         {
           server    = var.destination_server
-          namespace = local.destination_namespace
+          namespace = var.destination_namespace
         },
       ]
     }
@@ -53,7 +53,7 @@ resource "kubernetes_secret_v1" "postgres_database_secret" {
 
   type = "Opaque"
 
-  string_data = {
+  data = {
     local.postgres_password_key             = var.postgres_admin_password
     local.postgres_replication_password_key = var.postgres_replication_password
     local.hydra_password_key                = var.hydra_database_password
