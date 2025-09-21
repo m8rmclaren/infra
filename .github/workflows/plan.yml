@@ -87,10 +87,12 @@ jobs:
         with:
           message: |
             ### Terraform Plan Result
+            
+            ## Infrastructure (prod/infra)
             ```
-            ## Infra
             ${{ steps.infra_plan.outputs.stdout }}
 
-            ## K8s
+            ## K8s (prod/k8s)
+            ```
             ${{ steps.k8s_plan.outputs.stdout }}
             ```
