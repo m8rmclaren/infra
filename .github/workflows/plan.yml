@@ -42,10 +42,15 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform Plan
+      - name: Terraform Plan (infra)
+        id: infra_plan
         run: terraform -chdir=environments/prod/infra plan -no-color
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+
+      - name: Terraform Plan (k8s)
         continue-on-error: true
-        id: plan
+        id: k8s_plan
         env:
           DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
           TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -59,11 +64,28 @@ jobs:
         run: |
           kubeconfig_path="/tmp/kubeconfig"
 
+          # Terraform kubernetes modules support KUBECONFIG env var - read 
+          # kubeconfig from tf state & specify its location
+          terraform -chdir=environments/prod/infra output -raw kubeconfig > "$kubeconfig_path"
+
+          if terraform -chdir=environments/prod/infra output -raw kubeconfig > "$kubeconfig_path" 2>&1; then
+              info_message "Infra state contains kubeconfig"
+              export KUBECONFIG="$kubeconfig_path"
+              terraform -chdir=environments/prod/infra plan -no-color
+          else
+              terraform -chdir=environments/prod/infra plan -no-color
+          fi
+
+
       - name: Comment Plan on PR
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           message: |
             ### Terraform Plan Result
             ```
-            ${{ steps.plan.outputs.stdout }}
+            ## Infra
+            ${{ steps.infra_plan.outputs.stdout }}
+
+            ## K8s
+            ${{ steps.k8s_plan.outputs.stdout }}
             ```
