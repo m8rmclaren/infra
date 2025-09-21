@@ -76,9 +76,9 @@ jobs:
           if terraform -chdir=environments/prod/infra output -raw kubeconfig > "$kubeconfig_path" 2>&1; then
               echo "Infra state contains kubeconfig"
               export KUBECONFIG="$kubeconfig_path"
-              terraform -chdir=environments/prod/infra plan -no-color
+              terraform -chdir=environments/prod/k8s plan -no-color
           else
-              terraform -chdir=environments/prod/infra plan -no-color
+              terraform -chdir=environments/prod/k8s plan -no-color
           fi
 
 
@@ -91,6 +91,7 @@ jobs:
             ## Infrastructure (prod/infra)
             ```
             ${{ steps.infra_plan.outputs.stdout }}
+            ```
 
             ## K8s (prod/k8s)
             ```
