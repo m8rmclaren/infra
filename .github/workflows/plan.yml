@@ -43,11 +43,21 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan -no-color
+        run: terraform -chdir=environments/prod/infra plan -no-color
         continue-on-error: true
         id: plan
         env:
           DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_email: ${{ secrets.EMAIL }}
+          TF_VAR_domain: ${{ secrets.DOMAIN }}
+          TF_VAR_github_email: ${{ secrets.EMAIL }}
+          TF_VAR_github_pat: ${{ secrets.GH_PAT }}
+          TF_VAR_postgres_admin_password: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          TF_VAR_postgres_replication_password: ${{ secrets.POSTGRES_REPLICATION_PASSWORD }}
+          TF_VAR_hydra_database_password: ${{ secrets.HYDRA_DATABASE_PASSWORD }}
+        run: |
+          kubeconfig_path="/tmp/kubeconfig"
 
       - name: Comment Plan on PR
         uses: marocchino/sticky-pull-request-comment@v2
