@@ -79,10 +79,12 @@ jobs:
 
       - name: Terraform Format Check
         run: |
+          terraform -chdir=environments/prod/infra fmt -check
           terraform -chdir=environments/prod/k8s fmt -check
 
       - name: Terraform Validate
         run: |
+          terraform -chdir=environments/prod/infra validate
           terraform -chdir=environments/prod/k8s validate
 
       - name: Terraform Apply
