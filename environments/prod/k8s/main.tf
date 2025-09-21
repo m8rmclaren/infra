@@ -101,8 +101,8 @@ module "argocd" {
   depends_on = [module.certmanager, module.argocdsubdomain]
 }
 
-module "postgres" {
-  source = "../../../modules/postgres"
+module "database" {
+  source = "../../../modules/database"
 
   argocd_namespace = module.argocd.argocd_namespace
   gitops_repo      = module.argocd.repo_name
