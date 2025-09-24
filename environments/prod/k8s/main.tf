@@ -161,10 +161,8 @@ module "auth" {
   hydra_cookie_secret = var.hydra_cookie_secret
 
   # Kratos (identity) Config/Secrets
-  apple_developer_team_id   = var.apple_developer_team_id
-  chat_siwa_primary_app_id  = var.chat_siwa_primary_app_id
-  apple_siwa_private_key_id = var.apple_siwa_private_key_id
-  apple_siwa_private_key    = var.apple_siwa_private_key
+  apple_developer_team_id  = var.apple_developer_team_id
+  chat_siwa_primary_app_id = var.chat_siwa_primary_app_id
 
   depends_on = [module.database]
 }
