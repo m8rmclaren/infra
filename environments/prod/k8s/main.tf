@@ -101,6 +101,14 @@ module "argocd" {
   depends_on = [module.certmanager, module.argocdsubdomain]
 }
 
+locals {
+  hydra_database_name     = "hydra_db"
+  hydra_database_username = "hydra"
+
+  kratos_database_name     = "kratos_db"
+  kratos_database_username = "kratos"
+}
+
 module "database" {
   source = "../../../modules/database"
 
@@ -112,11 +120,46 @@ module "database" {
   postgres_admin_password       = var.postgres_admin_password
   postgres_replication_password = var.postgres_replication_password
 
-  hydra_database_name     = "hydra_db"
-  hydra_database_username = "hydra"
+  hydra_database_name     = local.hydra_database_name
+  hydra_database_username = local.hydra_database_username
   hydra_database_password = var.hydra_database_password
 
+  kratos_database_name     = local.kratos_database_name
+  kratos_database_username = local.kratos_database_username
+  kratos_database_password = var.kratos_database_password
+
   depends_on = [module.argocd]
+}
+
+module "auth" {
+  source = "../../../modules/auth"
+
+  argocd_namespace = module.argocd.argocd_namespace
+  gitops_repo      = module.argocd.repo_name
+
+  domain         = var.domain
+  subdomain      = "auth"
+  ip_address     = local.public_ip
+  cluster_issuer = local.cluster_issuer_name
+
+  destination_namespace = "auth"
+
+  postgres_hostname = module.database.postgres_hostname
+
+  kratos_database_name     = local.kratos_database_name
+  kratos_database_username = local.kratos_database_username
+  kratos_database_password = var.kratos_database_password
+
+  hydra_database_name     = local.hydra_database_name
+  hydra_database_username = local.hydra_database_username
+  hydra_database_password = var.hydra_database_password
+
+  hydra_system_secret = var.hydra_system_secret
+  hydra_cookie_secret = var.hydra_cookie_secret
+
+  auth_hostname = "auth.${var.domain}"
+
+  depends_on = [module.database]
 }
 
 module "website" {
@@ -133,5 +176,5 @@ module "website" {
   argocd_namespace = module.argocd.argocd_namespace
   gitops_repo      = module.argocd.repo_name
 
-  depends_on = [module.database, module.argocd]
+  depends_on = [module.argocd]
 }

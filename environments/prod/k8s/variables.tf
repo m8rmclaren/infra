@@ -42,8 +42,30 @@ variable "postgres_replication_password" {
   sensitive   = true
 }
 
+// Hydra
+
 variable "hydra_database_password" {
   type        = string
   description = "The password for the Hydra database in Postgres"
+  sensitive   = true
+}
+
+variable "hydra_system_secret" {
+  description = "Hydra system secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "hydra_cookie_secret" {
+  description = "Hydra cookie secret"
+  type        = string
+  sensitive   = true
+}
+
+// Kratos
+
+variable "kratos_database_password" {
+  type        = string
+  description = "The password for the Kratos database in Postgres"
   sensitive   = true
 }

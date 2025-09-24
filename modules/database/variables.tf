@@ -47,3 +47,19 @@ variable "hydra_database_password" {
   type        = string
   sensitive   = true
 }
+
+variable "kratos_database_name" {
+  description = "Kratos DB name."
+  type        = string
+}
+
+variable "kratos_database_username" {
+  description = "Kratos DB username."
+  type        = string
+}
+
+variable "kratos_database_password" {
+  description = "Kratos DB password."
+  type        = string
+  sensitive   = true
+}

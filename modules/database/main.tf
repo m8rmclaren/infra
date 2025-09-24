@@ -56,11 +56,13 @@ resource "kubernetes_secret_v1" "postgres_database_secret" {
   data = {
     (local.postgres_password_key)             = var.postgres_admin_password
     (local.postgres_replication_password_key) = var.postgres_replication_password
-    (local.hydra_password_key)                = var.hydra_database_password
+
+    (local.hydra_password_key)  = var.hydra_database_password
+    (local.kratos_password_key) = var.kratos_database_password
   }
 }
 
-module "website_prod" {
+module "database" {
   source = "../argo_helm_app"
 
   project  = local.name
@@ -108,6 +110,14 @@ module "website_prod" {
                   \\c ${var.hydra_database_name}
                   GRANT USAGE, CREATE ON SCHEMA public TO ${var.hydra_database_username};
                   ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${var.hydra_database_username};
+
+                  CREATE DATABASE ${var.kratos_database_name};
+                  CREATE USER ${var.kratos_database_username} WITH PASSWORD '${"$"}${local.kratos_password_key}';
+                  GRANT ALL PRIVILEGES ON DATABASE ${var.kratos_database_name} TO ${var.kratos_database_username};
+
+                  \\c ${var.kratos_database_name}
+                  GRANT USAGE, CREATE ON SCHEMA public TO ${var.kratos_database_username};
+                  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${var.kratos_database_username};
                 EOSQL
               EOT
             }

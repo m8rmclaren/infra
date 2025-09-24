@@ -66,6 +66,9 @@ jobs:
           TF_VAR_postgres_admin_password: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
           TF_VAR_postgres_replication_password: ${{ secrets.POSTGRES_REPLICATION_PASSWORD }}
           TF_VAR_hydra_database_password: ${{ secrets.HYDRA_DATABASE_PASSWORD }}
+          TF_VAR_hydra_system_secret: ${{ secrets.HYDRA_SYSTEM_SECRET }}
+          TF_VAR_hydra_cookie_secret: ${{ secrets.HYDRA_COOKIE_SECRET }}
+          TF_VAR_kratos_database_password: ${{ secrets.KRATOS_DATABASE_PASSWORD }}
         run: |
           kubeconfig_path="/tmp/kubeconfig"
 

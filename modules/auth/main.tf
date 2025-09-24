@@ -31,11 +31,39 @@ resource "kubectl_manifest" "argo_appproject" {
           namespace = var.destination_namespace
         },
       ]
+      clusterResourceWhitelist = [
+        {
+          group = "rbac.authorization.k8s.io"
+          kind  = "ClusterRole"
+        },
+        {
+          group = "rbac.authorization.k8s.io"
+          kind  = "ClusterRoleBinding"
+        },
+        {
+          group = "apiextensions.k8s.io"
+          kind  = "CustomResourceDefinition"
+        },
+      ]
     }
   })
 }
 
-resource "kubernetes_namespace_v1" "database" {
+locals {
+  auth_hostname = "${var.subdomain}.${var.domain}"
+}
+
+module "auth_domain" {
+  source = "../domain"
+
+  domain     = var.domain
+  subdomain  = var.subdomain
+  ip_address = var.ip_address
+  proxied    = false
+
+}
+
+resource "kubernetes_namespace_v1" "auth" {
   metadata {
     labels = {
       deployedBy = "infra"
@@ -43,19 +71,62 @@ resource "kubernetes_namespace_v1" "database" {
 
     name = var.destination_namespace
   }
+
+  depends_on = [module.auth_domain]
 }
 
-resource "kubernetes_secret_v1" "postgres_database_secret" {
+resource "kubernetes_secret_v1" "config" {
   metadata {
-    name      = local.postgres_secret_name
+    name      = local.secret_name
     namespace = var.destination_namespace
   }
 
   type = "Opaque"
 
   data = {
-    (local.postgres_password_key)             = var.postgres_admin_password
-    (local.postgres_replication_password_key) = var.postgres_replication_password
-    (local.hydra_password_key)                = var.hydra_database_password
+    (local.hydra_dsn_key) = "postgres://${var.hydra_database_username}:${var.hydra_database_password}@${var.postgres_hostname}:5432/${var.hydra_database_name}"
+    secretsSystem         = var.hydra_system_secret
+    secretsCookie         = var.hydra_cookie_secret
+
+    (local.kratos_dsn_key) = "postgres://${var.kratos_database_username}:${var.kratos_database_password}@${var.postgres_hostname}:5432/${var.kratos_database_name}"
   }
+}
+
+module "auth" {
+  source = "../argo_helm_app"
+
+  project  = local.name
+  revision = "HEAD"
+
+  application_name      = local.name
+  destination_namespace = var.destination_namespace
+  repo                  = var.gitops_repo
+  path_to_manifests     = local.path_to_manifests
+  sync_policy = {
+    automated = {
+      prune    = true
+      selfHeal = true
+    }
+  }
+
+  values = {
+    # https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#values
+    valuesObject = {
+      fullnameOverride = local.name
+      hostname         = local.auth_hostname
+      ingress = {
+        enableTls = true
+        annotations = {
+          "cert-manager.io/cluster-issuer" = var.cluster_issuer
+        }
+      }
+      hydra  = local.hydra
+      kratos = local.kratos
+    }
+  }
+
+  depends_on = [
+    kubectl_manifest.argo_appproject,
+    kubernetes_namespace_v1.auth,
+  ]
 }
