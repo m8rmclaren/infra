@@ -1,3 +1,7 @@
+#########################################
+# ArgoCD Config (AppProj & Application) #
+#########################################
+
 variable "argocd_namespace" {
   type        = string
   description = "The namespace where ArgoCD is deployed - AppProj deployed in this ns"
@@ -20,10 +24,18 @@ variable "gitops_repo" {
   description = "Git URL (or other) to the GitOps repo containing the stage and prod Helm chart"
 }
 
+#########################################
+# Database                              #
+#########################################
+
 variable "postgres_hostname" {
   description = "Hostname of Postgres database"
   type        = string
 }
+
+############################
+# Kratos Database Config   #
+############################
 
 variable "kratos_database_name" {
   description = "Kratos DB name."
@@ -41,6 +53,10 @@ variable "kratos_database_password" {
   sensitive   = true
 }
 
+############################
+# Hydra Database Config    #
+############################
+
 variable "hydra_database_name" {
   description = "Hydra DB name."
   type        = string
@@ -57,6 +73,10 @@ variable "hydra_database_password" {
   sensitive   = true
 }
 
+############################
+# Hydra Secret Config      #
+############################
+
 variable "hydra_system_secret" {
   description = "Hydra system secret"
   type        = string
@@ -69,10 +89,9 @@ variable "hydra_cookie_secret" {
   sensitive   = true
 }
 
-variable "auth_hostname" {
-  description = "Hostname of the auth server (e.g., auth.example.com)"
-  type        = string
-}
+############################
+# Networking/application   #
+############################
 
 variable "domain" {
   type        = string
@@ -92,4 +111,20 @@ variable "ip_address" {
 variable "cluster_issuer" {
   type        = string
   description = "ClusterIssuer name for cert-manager"
+}
+
+####################################
+# Identity & Social Sign in Config #
+####################################
+
+variable "apple_developer_team_id" {
+  description = "10-character Team ID associated with your developer account"
+  type        = string
+  sensitive   = true
+}
+
+variable "chat_siwa_primary_app_id" {
+  description = "Primary App ID of the Chat App in Apple Developer"
+  type        = string
+  sensitive   = true
 }

@@ -29,10 +29,10 @@ locals {
       config = {
         urls = {
           self = {
-            issuer = "https://${var.auth_hostname}"
+            issuer = "https://${local.auth_hostname}"
           }
-          login   = "https://${var.auth_hostname}/consent/login"
-          consent = "https://${var.auth_hostname}/consent/consent"
+          login   = "https://${local.auth_hostname}/consent/login"
+          consent = "https://${local.auth_hostname}/consent/consent"
         }
       }
       strategies = {

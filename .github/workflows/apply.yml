@@ -101,6 +101,8 @@ jobs:
           TF_VAR_hydra_system_secret: ${{ secrets.HYDRA_SYSTEM_SECRET }}
           TF_VAR_hydra_cookie_secret: ${{ secrets.HYDRA_COOKIE_SECRET }}
           TF_VAR_kratos_database_password: ${{ secrets.KRATOS_DATABASE_PASSWORD }}
+          TF_VAR_apple_developer_team_id: ${{ APPLE_DEVELOPER_TEAM_ID }}
+          TF_VAR_chat_siwa_primary_app_id: ${{ CHAT_PRIMARY_APP_ID }}
         run: |
           kubeconfig_path="/tmp/kubeconfig"
 

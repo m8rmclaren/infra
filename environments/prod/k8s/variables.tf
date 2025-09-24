@@ -42,7 +42,9 @@ variable "postgres_replication_password" {
   sensitive   = true
 }
 
-// Hydra
+#########################################
+# Database                              #
+#########################################
 
 variable "hydra_database_password" {
   type        = string
@@ -62,10 +64,28 @@ variable "hydra_cookie_secret" {
   sensitive   = true
 }
 
-// Kratos
+############################
+# Hydra Database Config    #
+############################
 
 variable "kratos_database_password" {
   type        = string
   description = "The password for the Kratos database in Postgres"
+  sensitive   = true
+}
+
+####################################
+# Identity & Social Sign in Config #
+####################################
+
+variable "apple_developer_team_id" {
+  description = "10-character Team ID associated with your developer account"
+  type        = string
+  sensitive   = true
+}
+
+variable "chat_siwa_primary_app_id" {
+  description = "Primary App ID of the Chat App in Apple Developer"
+  type        = string
   sensitive   = true
 }

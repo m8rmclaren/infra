@@ -146,18 +146,25 @@ module "auth" {
 
   postgres_hostname = module.database.postgres_hostname
 
+  # Kratos Database
   kratos_database_name     = local.kratos_database_name
   kratos_database_username = local.kratos_database_username
   kratos_database_password = var.kratos_database_password
 
+  # Hydra Database
   hydra_database_name     = local.hydra_database_name
   hydra_database_username = local.hydra_database_username
   hydra_database_password = var.hydra_database_password
 
+  # Hydra Secrets
   hydra_system_secret = var.hydra_system_secret
   hydra_cookie_secret = var.hydra_cookie_secret
 
-  auth_hostname = "auth.${var.domain}"
+  # Kratos (identity) Config/Secrets
+  apple_developer_team_id   = var.apple_developer_team_id
+  chat_siwa_primary_app_id  = var.chat_siwa_primary_app_id
+  apple_siwa_private_key_id = var.apple_siwa_private_key_id
+  apple_siwa_private_key    = var.apple_siwa_private_key
 
   depends_on = [module.database]
 }
