@@ -1,3 +1,9 @@
+# Generates a new RSA 2048-bit private key
+resource "tls_private_key" "siwa_placeholder" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
 locals {
   cors = {
     enabled = true
@@ -19,10 +25,11 @@ locals {
     client_id            = var.chat_siwa_primary_app_id
     apple_team_id        = var.apple_developer_team_id
     apple_private_key_id = "none"
-    apple_private_key    = "none"
-    issuer_url           = "https://appleid.apple.com"
-    mapper_url           = "base64://${filebase64("${path.module}/identity/apple.data-mapper.jsonnet")}"
-    scope                = ["email"]
+    # apple_private_key    = tls_private_key.siwa_placeholder.private_key_pem
+    apple_private_key = "none"
+    issuer_url        = "https://appleid.apple.com"
+    mapper_url        = "base64://${filebase64("${path.module}/identity/apple.data-mapper.jsonnet")}"
+    scope             = ["email"] # Not needed, technically
   }
 
   # https://www.ory.sh/docs/kratos/reference/configuration
@@ -31,12 +38,8 @@ locals {
       leak_sensitive_values = true
     }
     identity = {
+      default_schema_id = "user_v1"
       schemas = [
-        {
-          id                     = "default"
-          url                    = "base64://${filebase64("${path.module}/identity/identity.schema.json")}"
-          selfservice_selectable = true # https://www.ory.sh/docs/identities/model/identity-schema-selection#configuration
-        },
         {
           id                     = "user_v1"
           url                    = "base64://${filebase64("${path.module}/identity/identity.schema.json")}"
@@ -58,6 +61,22 @@ locals {
             providers = [
               local.apple_provider_config
             ]
+          }
+        }
+      }
+      flows = {
+        registration = {
+          after = {
+            password = {
+              hooks = [
+                { hook = "session" } # https://www.ory.sh/docs/kratos/self-service/flows/user-registration#successful-registration
+              ]
+            }
+            oidc = {
+              hooks = [
+                { hook = "session" } # https://www.ory.sh/docs/kratos/self-service/flows/user-registration#successful-registration
+              ]
+            }
           }
         }
       }
