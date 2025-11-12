@@ -109,6 +109,16 @@ locals {
   kratos_database_username = "kratos"
 }
 
+# Hack
+module "pgadmin" {
+  source = "../../../modules/domain"
+
+  domain     = var.domain
+  subdomain  = "pgadmin"
+  ip_address = local.public_ip
+  proxied    = false
+}
+
 module "database" {
   source = "../../../modules/database"
 
@@ -183,3 +193,22 @@ module "website" {
 
   depends_on = [module.argocd]
 }
+
+module "health_auto_export" {
+  source = "../../../modules/health_auto_export_server"
+
+  domain     = var.domain
+  subdomain  = "health"
+  ip_address = local.public_ip
+
+  cluster_issuer = local.cluster_issuer_name
+
+  github_email = var.github_email
+  github_token = var.github_pat
+
+  argocd_namespace = module.argocd.argocd_namespace
+  gitops_repo      = module.argocd.repo_name
+
+  depends_on = [module.website]
+}
+
