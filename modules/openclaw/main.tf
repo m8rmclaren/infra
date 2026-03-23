@@ -15,7 +15,8 @@ resource "digitalocean_droplet" "openclaw" {
 
   vpc_uuid = var.vpc_uuid
 
-  ssh_keys = [var.ssh_key_id]
+  ssh_keys    = [var.ssh_key_id]
+  resize_disk = false
 
   monitoring = true
 
