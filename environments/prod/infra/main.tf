@@ -83,6 +83,11 @@ output "public_ip" {
   value = digitalocean_reserved_ip.primary.ip_address
 }
 
+output "ssh_private_key" {
+  value     = tls_private_key.primary.private_key_openssh
+  sensitive = true
+}
+
 output "openclaw_public_ip" {
   value = digitalocean_reserved_ip.openclaw.ip_address
 }
