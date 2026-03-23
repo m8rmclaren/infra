@@ -41,7 +41,7 @@ resource "digitalocean_vpc" "k8s" {
 resource "digitalocean_vpc" "main" {
   name     = "main"
   region   = local.do_region
-  ip_range = "10.0.4.0/22"
+  ip_range = "10.0.8.0/22"
 }
 
 resource "digitalocean_reserved_ip" "primary" {
