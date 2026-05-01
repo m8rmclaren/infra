@@ -26,7 +26,8 @@ resource "digitalocean_droplet" "control_plane" {
     kubeconfig_path = local.kubectl_path
   })
 
-  monitoring = true
+  public_networking = true
+  monitoring        = true
 
   tags = ["k8s", "control-plane"]
 }
