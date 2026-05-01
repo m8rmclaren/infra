@@ -48,20 +48,20 @@ resource "digitalocean_reserved_ip" "primary" {
   region = local.do_region
 }
 
-resource "digitalocean_reserved_ip" "openclaw" {
-  region = local.do_region
-}
+# resource "digitalocean_reserved_ip" "openclaw" {
+#   region = local.do_region
+# }
 
-module "openclaw" {
-  source = "../../../modules/openclaw"
-  region = local.do_region
-  # droplet_size = "s-1vcpu-1gb"
-  droplet_size = "s-2vcpu-2gb"
-  ssh_key_id   = digitalocean_ssh_key.primary.id
-  ssh_key      = tls_private_key.primary.private_key_openssh
-  vpc_uuid     = digitalocean_vpc.main.id
-  public_ip    = digitalocean_reserved_ip.openclaw.ip_address
-}
+# module "openclaw" {
+#   source = "../../../modules/openclaw"
+#   region = local.do_region
+#   # droplet_size = "s-1vcpu-1gb"
+#   droplet_size = "s-2vcpu-2gb"
+#   ssh_key_id   = digitalocean_ssh_key.primary.id
+#   ssh_key      = tls_private_key.primary.private_key_openssh
+#   vpc_uuid     = digitalocean_vpc.main.id
+#   public_ip    = digitalocean_reserved_ip.openclaw.ip_address
+# }
 
 module "controlplane" {
   source = "../../../modules/controlplane"
@@ -89,6 +89,6 @@ output "ssh_private_key" {
   sensitive = true
 }
 
-output "openclaw_public_ip" {
-  value = digitalocean_reserved_ip.openclaw.ip_address
-}
+# output "openclaw_public_ip" {
+#   value = digitalocean_reserved_ip.openclaw.ip_address
+# }
